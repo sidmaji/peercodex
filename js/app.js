@@ -8,6 +8,7 @@ class App {
     constructor() {
         this.currentUser = null
         this.currentUserProfile = null
+        this.authResolved = false
         this.init()
     }
 
@@ -15,6 +16,18 @@ class App {
         this.setupRoutes()
         this.setupAuth()
         this.bindEvents()
+
+        // Hide all content initially until auth is resolved
+        this.showLoadingState()
+    }
+
+    showLoadingState() {
+        // Hide everything initially to prevent flashing
+        document.getElementById('landing-page').classList.add('hidden')
+        document.getElementById('sidebar').classList.add('hidden')
+        document.getElementById('topbar').classList.add('hidden')
+        document.getElementById('app-content').classList.add('hidden')
+        document.getElementById('floating-navbar').style.visibility = 'hidden'
     }
 
     setupRoutes() {
@@ -56,13 +69,16 @@ class App {
 
     setupAuth() {
         firebaseAuth.onAuthStateChanged(async (user) => {
+            // Don't process auth changes until we've resolved the initial state
+            if (this.authResolved && user === this.currentUser) {
+                return
+            }
+
             this.currentUser = user
 
             if (user) {
                 router.setAuthenticationStatus(true)
-                ui.showLoggedInState(user)
 
-                // Always try to load user profile from Firestore first
                 try {
                     const userProfile = await firestore.getUserProfile(user.uid)
 
@@ -70,32 +86,42 @@ class App {
                         // Use Firestore profile data - this is the source of truth
                         this.currentUserProfile = userProfile
 
-                        // Update UI with Firestore data (firstName + lastName)
+                        // ALWAYS update UI with Firestore data
                         ui.updateUserInfo({
                             firstName: userProfile.firstName,
                             lastName: userProfile.lastName,
                             email: userProfile.email || user.email,
                         })
 
-                        // Don't show welcome message after onboarding is complete
+                        // Show logged in state without messages on initial load
+                        ui.showLoggedInState(user)
+
+                        // Only show welcome message on fresh login (not page refresh)
+                        if (this.authResolved) {
+                            ui.showSuccess('Welcome back!')
+                        }
+
+                        // Navigate appropriately
                         if (window.location.pathname === '/' || window.location.pathname === '') {
                             router.navigate('/dashboard')
                         } else {
                             router.start()
                         }
                     } else {
-                        // No profile found or incomplete - check for onboarding
+                        // No profile or incomplete - trigger onboarding
                         this.currentUserProfile = null
 
-                        // Set temporary fallback name while onboarding loads
+                        // Temporary fallback while onboarding loads
                         ui.updateUserInfo({
                             firstName: user.displayName?.split(' ')[0] || user.email.split('@')[0],
                             lastName: user.displayName?.split(' ')[1] || '',
                             email: user.email,
                         })
 
+                        ui.showLoggedInState(user)
+
                         const needsOnboarding = await onboarding.checkAndShowOnboarding(user)
-                        if (!needsOnboarding) {
+                        if (!needsOnboarding && this.authResolved) {
                             ui.showSuccess('Welcome back!')
                         }
 
@@ -107,13 +133,15 @@ class App {
                     }
                 } catch (error) {
                     console.error('Error loading user profile:', error)
-                    // Only use Firebase fallback if Firestore completely fails
                     this.currentUserProfile = null
+
                     ui.updateUserInfo({
                         firstName: user.displayName?.split(' ')[0] || user.email.split('@')[0],
                         lastName: user.displayName?.split(' ')[1] || '',
                         email: user.email,
                     })
+
+                    ui.showLoggedInState(user)
 
                     if (window.location.pathname === '/' || window.location.pathname === '') {
                         router.navigate('/dashboard')
@@ -122,13 +150,18 @@ class App {
                     }
                 }
             } else {
+                // Not logged in
                 router.setAuthenticationStatus(false)
                 ui.showLoggedOutState()
                 this.currentUserProfile = null
+
                 if (window.location.pathname !== '/') {
                     router.navigate('/')
                 }
             }
+
+            // Mark auth as resolved after first check
+            this.authResolved = true
         })
     }
 
@@ -325,7 +358,7 @@ class App {
 
         try {
             await firebaseAuth.signInWithEmail(email, password)
-            ui.showSuccess('Welcome back!')
+            // Auth state change will handle the rest
         } catch (error) {
             let errorMessage = 'Login failed. '
 
@@ -406,6 +439,7 @@ class App {
     async handleGoogleAuth() {
         try {
             await firebaseAuth.signInWithGoogle()
+            // Auth state change will handle the rest
         } catch (error) {
             let errorMessage = 'Google authentication failed. '
 

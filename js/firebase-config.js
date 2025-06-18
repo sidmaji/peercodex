@@ -1,11 +1,13 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
 import {
+    browserLocalPersistence,
     createUserWithEmailAndPassword,
     getAuth,
     GoogleAuthProvider,
     onAuthStateChanged,
     sendEmailVerification,
     sendPasswordResetEmail,
+    setPersistence,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
@@ -29,6 +31,11 @@ const googleProvider = new GoogleAuthProvider()
 
 googleProvider.setCustomParameters({
     prompt: 'select_account',
+})
+
+// Set persistence to LOCAL (survives browser restarts)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.warn('Failed to set auth persistence:', error)
 })
 
 export const firebaseAuth = {

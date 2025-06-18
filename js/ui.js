@@ -130,12 +130,13 @@ class UIManager {
     showLoggedInState(user) {
         this.isLoggedIn = true
 
-        // Hide navbar immediately to prevent flash
+        // Hide landing page and navbar
+        document.getElementById('landing-page').classList.add('hidden')
         const navbar = document.getElementById('floating-navbar')
         navbar.style.opacity = '0'
         navbar.style.visibility = 'hidden'
 
-        document.getElementById('landing-page').classList.add('hidden')
+        // Show app interface
         document.getElementById('sidebar').classList.remove('hidden')
         document.getElementById('topbar').classList.remove('hidden')
         document.getElementById('app-content').classList.remove('hidden')
@@ -143,29 +144,30 @@ class UIManager {
         // Show sidebar by default
         document.getElementById('sidebar').classList.remove('-translate-x-full')
 
-        this.updateUserInfo(user)
         this.hideAllModals()
     }
 
     showLoggedOutState() {
         this.isLoggedIn = false
 
-        // Show navbar properly
-        const navbar = document.getElementById('floating-navbar')
-        navbar.style.opacity = ''
-        navbar.style.visibility = ''
-        navbar.classList.remove('hidden')
-
+        // Show landing page and navbar
         document.getElementById('landing-page').classList.remove('hidden')
+        const navbar = document.getElementById('floating-navbar')
+        navbar.style.opacity = '1'
+        navbar.style.visibility = 'visible'
+
+        // Hide app interface
         document.getElementById('sidebar').classList.add('hidden')
         document.getElementById('topbar').classList.add('hidden')
         document.getElementById('app-content').classList.add('hidden')
+
+        this.hideAllModals()
     }
 
     updateUserInfo(user) {
         let userName, userInitial
 
-        // Always prioritize firstName + lastName if available
+        // ALWAYS prioritize firstName + lastName from Firestore
         if (user.firstName) {
             if (user.lastName) {
                 userName = `${user.firstName} ${user.lastName}`
@@ -174,7 +176,7 @@ class UIManager {
             }
             userInitial = user.firstName.charAt(0).toUpperCase()
         }
-        // Fallback to displayName only if no firstName
+        // Only use displayName if no firstName from Firestore
         else if (user.displayName) {
             userName = user.displayName
             userInitial = userName.charAt(0).toUpperCase()
