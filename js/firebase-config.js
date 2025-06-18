@@ -3,35 +3,45 @@ import {
     browserLocalPersistence,
     createUserWithEmailAndPassword,
     getAuth,
-    GoogleAuthProvider,
     onAuthStateChanged,
     sendEmailVerification,
     sendPasswordResetEmail,
     setPersistence,
     signInWithEmailAndPassword,
-    signInWithPopup,
     signOut,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js'
 import { addDoc, collection, doc, enableNetwork, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
 
-const firebaseConfig = {
-    apiKey: 'AIzaSyCK_SC25tobvEgy1AaSf-yixl9KHrxYRzA',
-    authDomain: 'peer-codex.firebaseapp.com',
-    projectId: 'peer-codex',
-    storageBucket: 'peer-codex.firebasestorage.app',
-    messagingSenderId: '906455785777',
-    appId: '1:906455785777:web:c10dbcc9075b89ee3a5010',
-    measurementId: 'G-LG4F2CXYXC',
+// For production, Firebase hosting can provide config automatically
+let firebaseConfig
+
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Development config with fallbacks
+    firebaseConfig = {
+        apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || 'AIzaSyCK_SC25tobvEgy1AaSf-yixl9KHrxYRzA',
+        authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || 'peer-codex.firebaseapp.com',
+        projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || 'peer-codex',
+        storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || 'peer-codex.firebasestorage.app',
+        messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '906455785777',
+        appId: import.meta.env?.VITE_FIREBASE_APP_ID || '1:906455785777:web:c10dbcc9075b89ee3a5010',
+        measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || 'G-LG4F2CXYXC',
+    }
+} else {
+    // Production - use your actual production config
+    firebaseConfig = {
+        apiKey: 'AIzaSyCK_SC25tobvEgy1AaSf-yixl9KHrxYRzA',
+        authDomain: 'peer-codex.firebaseapp.com',
+        projectId: 'peer-codex',
+        storageBucket: 'peer-codex.firebasestorage.app',
+        messagingSenderId: '906455785777',
+        appId: '1:906455785777:web:c10dbcc9075b89ee3a5010',
+        measurementId: 'G-LG4F2CXYXC',
+    }
 }
 
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const db = getFirestore(app)
-const googleProvider = new GoogleAuthProvider()
-
-googleProvider.setCustomParameters({
-    prompt: 'select_account',
-})
 
 // Set persistence to LOCAL (survives browser restarts)
 setPersistence(auth, browserLocalPersistence).catch((error) => {
@@ -42,7 +52,6 @@ export const firebaseAuth = {
     auth,
     signInWithEmail: (email, password) => signInWithEmailAndPassword(auth, email, password),
     signUpWithEmail: (email, password) => createUserWithEmailAndPassword(auth, email, password),
-    signInWithGoogle: () => signInWithPopup(auth, googleProvider),
     signOut: () => signOut(auth),
     sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
     sendEmailVerification: (user) => sendEmailVerification(user),

@@ -23,6 +23,12 @@ class OnboardingManager {
     }
 
     async checkAndShowOnboarding(user) {
+        // Check if email is verified first
+        if (!user.emailVerified) {
+            this.showEmailVerificationRequired(user)
+            return true
+        }
+
         try {
             const userProfile = await firestore.getUserProfile(user.uid)
 
@@ -31,13 +37,62 @@ class OnboardingManager {
                 this.showOnboarding(user)
                 return true
             }
+
             return false
         } catch (error) {
-            console.error('Error checking user profile:', error)
-            // If error, assume new user and show onboarding
+            console.error('Error checking onboarding status:', error)
             this.showOnboarding(user)
             return true
         }
+    }
+
+    showEmailVerificationRequired(user) {
+        document.getElementById('onboarding-modal').classList.remove('hidden')
+        document.getElementById('onboarding-content').innerHTML = `
+            <div class="text-center animate-fade-in">
+                <div class="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+
+                <h2 class="text-3xl font-bold text-white mb-4">Verify Your Email</h2>
+                <p class="text-gray-300 mb-6 text-lg">
+                    Please check your Frisco ISD email (<strong>${user.email}</strong>) and click the verification link to continue.
+                </p>
+
+                <div class="bg-blue-900/30 border border-blue-500/30 rounded-xl p-6 mb-8">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-6 h-6 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div class="text-left">
+                            <h4 class="text-blue-300 font-semibold mb-2">Email Verification Required</h4>
+                            <p class="text-blue-100 text-sm">
+                                For security and to ensure you're a Frisco ISD student, you must verify your email address before accessing PeerCodex.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <button onclick="window.location.reload()"
+                        class="w-full py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300">
+                        I've Verified My Email - Continue
+                    </button>
+
+                    <button onclick="window.app.resendVerificationEmail('${user.uid}')"
+                        class="w-full py-3 glass rounded-xl font-semibold text-gray-200 hover:bg-white/10 transition-colors">
+                        Resend Verification Email
+                    </button>
+
+                    <button onclick="window.app.handleLogout()"
+                        class="w-full py-3 text-gray-400 hover:text-gray-200 transition-colors">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        `
     }
 
     showOnboarding(user) {
@@ -289,49 +344,69 @@ class OnboardingManager {
 
     getProfileStep() {
         return `
-      <div class="animate-fade-in">
-        <h2 class="text-3xl font-bold text-white mb-4 text-center">Let others know who you are</h2>
-        <p class="text-gray-300 text-center mb-8">Complete your profile to get the most out of PeerCodex</p>
+            <div class="animate-fade-in">
+                <h2 class="text-3xl font-bold text-white mb-4 text-center">Complete Your Profile</h2>
+                <p class="text-gray-300 text-center mb-8">Let other Frisco ISD students know who you are</p>
 
-        <div class="max-w-lg mx-auto space-y-6">
-          <div class="text-center mb-8">
-            <div class="w-24 h-24 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto">
-              <span class="text-white font-bold text-2xl">${(this.userData.firstName || 'U').charAt(0).toUpperCase()}</span>
+                <div class="max-w-lg mx-auto space-y-6">
+                    <div class="text-center mb-8">
+                        <div class="w-24 h-24 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto">
+                            <span class="text-white font-bold text-2xl">${(this.userData.firstName || 'U').charAt(0).toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="firstName" placeholder="First Name" value="${this.userData.firstName || ''}"
+                            class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400" required>
+                        <input type="text" id="lastName" placeholder="Last Name" value="${this.userData.lastName || ''}"
+                            class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400" required>
+                    </div>
+
+                    <div>
+                        <select id="gradeLevel" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white" required>
+                            <option value="">Select Your Grade Level</option>
+                            <option value="9">9th Grade (Freshman)</option>
+                            <option value="10">10th Grade (Sophomore)</option>
+                            <option value="11">11th Grade (Junior)</option>
+                            <option value="12">12th Grade (Senior)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <select id="schoolName" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white" required>
+                            <option value="">Select Your School</option>
+                            <option value="Centennial High School">Centennial High School</option>
+                            <option value="Frisco High School">Frisco High School</option>
+                            <option value="Heritage High School">Heritage High School</option>
+                            <option value="Independence High School">Independence High School</option>
+                            <option value="Lebanon Trail High School">Lebanon Trail High School</option>
+                            <option value="Liberty High School">Liberty High School</option>
+                            <option value="Little Elm High School">Little Elm High School</option>
+                            <option value="Lone Star High School">Lone Star High School</option>
+                            <option value="Memorial High School">Memorial High School</option>
+                            <option value="Panther Creek High School">Panther Creek High School</option>
+                            <option value="Reedy High School">Reedy High School</option>
+                            <option value="Wakeland High School">Wakeland High School</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <textarea id="bio" placeholder="Tell other students about yourself (optional)" maxlength="100"
+                            class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400 resize-none" rows="3"></textarea>
+                        <p class="text-xs text-gray-400 mt-1"><span id="bio-count">0</span>/100 characters</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="window.onboarding.showStep(3)" class="px-8 py-3 glass rounded-xl font-semibold text-gray-300 hover:text-white transition-colors">
+                        Back
+                    </button>
+                    <button id="next-btn" onclick="window.onboarding.nextStep()" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300" disabled>
+                        Next
+                    </button>
+                </div>
             </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="firstName" placeholder="First Name" value="${
-                this.userData.firstName || ''
-            }" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400" required>
-            <input type="text" id="lastName" placeholder="Last Name" value="${
-                this.userData.lastName || ''
-            }" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400" required>
-          </div>
-
-          <input type="text" id="bio" placeholder="One-liner bio (optional)" maxlength="100" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400">
-
-          <select id="gradeLevel" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white" required>
-            <option value="" class="bg-gray-800 text-gray-400">Select Grade Level</option>
-            <option value="9" class="bg-gray-800 text-white">9th Grade</option>
-            <option value="10" class="bg-gray-800 text-white">10th Grade</option>
-            <option value="11" class="bg-gray-800 text-white">11th Grade</option>
-            <option value="12" class="bg-gray-800 text-white">12th Grade</option>
-          </select>
-
-          <input type="text" id="schoolName" placeholder="School Name (optional)" class="w-full p-4 bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400">
-        </div>
-
-        <div class="flex justify-between mt-8">
-          <button id="back-btn" class="px-6 py-3 glass rounded-xl font-semibold text-white hover:bg-white/20 transition-all">
-            Back
-          </button>
-          <button id="next-btn" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold transition-all">
-            Continue
-          </button>
-        </div>
-      </div>
-    `
+        `
     }
 
     getReadyStep() {
@@ -521,7 +596,15 @@ class OnboardingManager {
         try {
             const user = this.userData.user
 
-            // Prepare user data with firstName and lastName as the primary fields
+            // Final check for email verification
+            await user.reload()
+            if (!user.emailVerified) {
+                ui.showError('Please verify your email before completing onboarding')
+                this.showEmailVerificationRequired(user)
+                return
+            }
+
+            // Prepare user data with mandatory school name
             const userData = {
                 uid: user.uid,
                 email: user.email,
@@ -529,12 +612,13 @@ class OnboardingManager {
                 lastName: this.userData.profile.lastName,
                 bio: this.userData.profile.bio || '',
                 gradeLevel: this.userData.profile.gradeLevel,
-                schoolName: this.userData.profile.schoolName || '',
+                schoolName: this.userData.profile.schoolName, // Now mandatory
                 roles: this.userData.roles,
                 menteeInterests: this.userData.menteeInterests || [],
                 mentorOffers: this.userData.mentorOffers || [],
                 goals: this.userData.goals || [],
                 onboardingCompleted: true,
+                emailVerified: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             }
@@ -544,8 +628,10 @@ class OnboardingManager {
                 const success = await firestore.setUserProfile(user.uid, userData)
                 if (!success) {
                     localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(userData))
+                    ui.showSuccess('Profile saved locally. Will sync when online.')
+                } else {
+                    ui.showSuccess('Welcome to PeerCodex!')
                 }
-                ui.showSuccess('Welcome to PeerCodex! Your profile has been set up.')
             } catch (error) {
                 console.warn('Failed to save to Firestore:', error)
                 localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(userData))
@@ -555,17 +641,12 @@ class OnboardingManager {
             // Close onboarding modal
             document.getElementById('onboarding-modal').classList.add('hidden')
 
-            // IMMEDIATELY update UI with the correct name from onboarding form
+            // Immediately update UI with the correct name from onboarding
             ui.updateUserInfo({
                 firstName: userData.firstName,
                 lastName: userData.lastName,
                 email: userData.email,
             })
-
-            // Update the app's current profile reference
-            if (window.app) {
-                window.app.currentUserProfile = userData
-            }
 
             // Navigate to dashboard
             router.navigate('/dashboard')

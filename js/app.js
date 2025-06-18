@@ -178,13 +178,13 @@ class App {
             await this.handleEmailSignup()
         })
 
-        // Google auth buttons
-        document.getElementById('google-login')?.addEventListener('click', async () => {
-            await this.handleGoogleAuth()
-        })
-        document.getElementById('google-signup')?.addEventListener('click', async () => {
-            await this.handleGoogleAuth()
-        })
+        // Remove Google auth button handlers
+        // document.getElementById('google-login')?.addEventListener('click', async () => {
+        //     await this.handleGoogleAuth()
+        // })
+        // document.getElementById('google-signup')?.addEventListener('click', async () => {
+        //     await this.handleGoogleAuth()
+        // })
 
         // Forgot password
         document.getElementById('forgot-password-btn')?.addEventListener('click', async () => {
@@ -347,12 +347,23 @@ class App {
         }
     }
 
+    validateFriscoEmail(email) {
+        const domain = '@k12.friscoisd.org'
+        return email.toLowerCase().endsWith(domain)
+    }
+
     async handleEmailLogin() {
         const email = document.getElementById('login-email').value
         const password = document.getElementById('login-password').value
 
         if (!email || !password) {
             ui.showError('Please fill in all fields')
+            return
+        }
+
+        // Validate Frisco ISD email domain
+        if (!this.validateFriscoEmail(email)) {
+            ui.showError('Please use your Frisco ISD email address (@k12.friscoisd.org)')
             return
         }
 
@@ -394,6 +405,12 @@ class App {
             return
         }
 
+        // Validate Frisco ISD email domain
+        if (!this.validateFriscoEmail(email)) {
+            ui.showError('Please use your Frisco ISD email address (@k12.friscoisd.org)')
+            return
+        }
+
         if (password !== confirmPassword) {
             ui.showError('Passwords do not match')
             return
@@ -410,10 +427,10 @@ class App {
             // Send email verification
             try {
                 await firebaseAuth.sendEmailVerification(userCredential.user)
-                ui.showSuccess('Account created! Please check your email to verify your account.')
+                ui.showSuccess('Account created! Please check your Frisco ISD email to verify your account before continuing.')
             } catch (verificationError) {
                 console.warn('Failed to send verification email:', verificationError)
-                ui.showSuccess('Account created successfully!')
+                ui.showError('Account created but failed to send verification email. Please contact support.')
             }
         } catch (error) {
             let errorMessage = 'Signup failed. '
@@ -436,31 +453,10 @@ class App {
         }
     }
 
-    async handleGoogleAuth() {
-        try {
-            await firebaseAuth.signInWithGoogle()
-            // Auth state change will handle the rest
-        } catch (error) {
-            let errorMessage = 'Google authentication failed. '
-
-            if (error.message.includes('popup')) {
-                errorMessage = 'Please allow popups for this site or try email signup instead.'
-            } else {
-                switch (error.code) {
-                    case 'auth/popup-closed-by-user':
-                        errorMessage = 'Authentication cancelled by user.'
-                        break
-                    case 'auth/cancelled-popup-request':
-                        errorMessage = 'Please allow popups for this site.'
-                        break
-                    default:
-                        errorMessage += error.message
-                }
-            }
-
-            ui.showError(errorMessage)
-        }
-    }
+    // Remove Google auth handler
+    // async handleGoogleAuth() {
+    //     // Removed Google authentication
+    // }
 
     async handleForgotPassword() {
         const email = document.getElementById('login-email').value
@@ -751,6 +747,18 @@ class App {
         } catch (error) {
             console.error('Error sending mentor request:', error)
             ui.showError('Failed to send request. Please try again.')
+        }
+    }
+
+    async resendVerificationEmail(userId) {
+        try {
+            if (this.currentUser) {
+                await firebaseAuth.sendEmailVerification(this.currentUser)
+                ui.showSuccess('Verification email sent! Check your Frisco ISD email.')
+            }
+        } catch (error) {
+            console.error('Resend verification error:', error)
+            ui.showError('Failed to send verification email. Please try again.')
         }
     }
 
