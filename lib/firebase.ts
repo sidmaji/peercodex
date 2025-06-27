@@ -3,13 +3,13 @@ import { createUserWithEmailAndPassword, signOut as firebaseSignOut, getAuth, se
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
-    apiKey: 'AIzaSyCK_SC25tobvEgy1AaSf-yixl9KHrxYRzA',
-    authDomain: 'peer-codex.firebaseapp.com',
-    projectId: 'peer-codex',
-    storageBucket: 'peer-codex.firebasestorage.app',
-    messagingSenderId: '906455785777',
-    appId: '1:906455785777:web:c10dbcc9075b89ee3a5010',
-    measurementId: 'G-LG4F2CXYXC',
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
 }
 
 const app = initializeApp(firebaseConfig)
