@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PeerCodex - Connect, Learn, Grow</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+        <!-- Tailwind CSS & daisyUI -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+        <!-- Custom Styles -->
+        <link rel="stylesheet" href="./css/styles.css" />
+
+        <!-- Firebase -->
+        <script type="module" src="./js/firebase-config.js"></script>
+
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            inter: ['Inter', 'sans-serif'],
+                        },
+                        animation: {
+                            'fade-in': 'fadeIn 0.5s ease-in-out',
+                            'slide-in': 'slideIn 0.3s ease-out',
+                            'slide-in-left': 'slideInLeft 0.8s ease-out',
+                            'slide-in-right': 'slideInRight 0.8s ease-out',
+                            'slide-in-up': 'slideInUp 0.8s ease-out',
+                            float: 'float 3s ease-in-out infinite',
+                        },
+                    },
+                },
+            }
+        </script>
+    </head>
+
+    <body class="font-inter bg-gray-900 min-h-screen">
+        <!-- Floating Navbar (shown when not logged in) -->
+        <nav id="floating-navbar" class="fixed top-4 left-1/2 z-50 px-6 py-3 glass rounded-full shadow-lg">
+            <div class="flex items-center space-x-8">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">PC</span>
+                    </div>
+                    <span class="font-semibold text-white">PeerCodex</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#features" class="text-gray-300 hover:text-white transition-colors cursor-pointer">Features</a>
+                    <a href="#how-it-works" class="text-gray-300 hover:text-white transition-colors cursor-pointer">How it Works</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-white transition-colors cursor-pointer">Pricing</a>
+                    <a href="#contact" class="text-gray-300 hover:text-white transition-colors cursor-pointer">Contact</a>
+                    <button id="nav-login-btn" class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 text-sm">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar (shown when logged in) -->
+        <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 glass transform -translate-x-full transition-transform duration-300 z-40 hidden">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-xl flex items-center justify-center animate-float">
+                        <span class="text-white font-bold">PC</span>
+                    </div>
+                    <span class="font-bold text-xl text-gray-800 dark:text-white">PeerCodex</span>
+                </div>
+
+                <nav class="space-y-2">
+                    <a href="/dashboard" class="nav-link flex items-center space-x-3 p-3 rounded-xl hover:bg-white/20 transition-all group">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v1H8V5z"></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 group-hover:text-indigo-500">Dashboard</span>
+                    </a>
+                    <a href="/marketplace" class="nav-link flex items-center space-x-3 p-3 rounded-xl hover:bg-white/20 transition-all group">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 group-hover:text-indigo-500">Marketplace</span>
+                    </a>
+                    <a href="/forum" class="nav-link flex items-center space-x-3 p-3 rounded-xl hover:bg-white/20 transition-all group">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 group-hover:text-indigo-500">Forum</span>
+                    </a>
+                    <a href="/mentor" class="nav-link flex items-center space-x-3 p-3 rounded-xl hover:bg-white/20 transition-all group">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            ></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 group-hover:text-indigo-500">Mentoring</span>
+                    </a>
+                    <a href="/profile" class="nav-link flex items-center space-x-3 p-3 rounded-xl hover:bg-white/20 transition-all group">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-200 group-hover:text-indigo-500">Profile</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Topbar (shown when logged in) -->
+        <header id="topbar" class="fixed top-0 right-0 left-64 glass p-4 z-30 hidden">
+            <div class="flex items-center justify-between">
+                <button id="sidebar-toggle" class="lg:hidden p-2 rounded-lg hover:bg-white/20 transition-colors">
+                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div id="user-avatar" class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-semibold" id="user-initial">U</span>
+                        </div>
+                        <span id="user-name" class="text-gray-200 font-medium">User</span>
+                    </div>
+
+                    <button id="logout-btn" class="p-2 rounded-lg hover:bg-red-900/20 transition-colors text-red-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="transition-all duration-300">
+            <!-- Landing Page -->
+            <div id="landing-page" class="min-h-screen">
+                <!-- Hero Section -->
+                <section class="hero-bg min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-black/30"></div>
+                    <div class="text-center max-w-4xl mx-auto animate-fade-in relative z-10">
+                        <div class="mb-8">
+                            <div class="w-20 h-20 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float">
+                                <span class="text-white font-bold text-2xl">PC</span>
+                            </div>
+                            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">PeerCodex</h1>
+                            <p class="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed">
+                                Connect, collaborate, and grow with ambitious high school students.<br />
+                                <span class="text-lg opacity-80">Projects • Marketplace • Mentoring • Ideas</span>
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                            <button
+                                id="login-btn"
+                                class="px-8 py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-2xl font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                            >
+                                Get Started
+                            </button>
+                            <button id="learn-more-btn" class="px-8 py-4 glass rounded-2xl font-semibold text-white hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                Learn More
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Features Section -->
+                <section id="features" class="py-20 bg-gray-800">
+                    <div class="container mx-auto px-4">
+                        <div class="text-center mb-16 scroll-animate">
+                            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Powerful Features</h2>
+                            <p class="text-xl text-gray-300 max-w-3xl mx-auto">Everything you need to connect, collaborate, and succeed with your peers</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                            <div class="glass p-8 rounded-2xl hover:shadow-xl transition-all duration-300 group scroll-animate">
+                                <div class="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="font-semibold text-2xl mb-4 text-white">Project Collaboration</h3>
+                                <p class="text-gray-300 leading-relaxed">Find like-minded teammates for academic projects, research initiatives, and startup ideas. Build something amazing together.</p>
+                            </div>
+
+                            <div class="glass p-8 rounded-2xl hover:shadow-xl transition-all duration-300 group scroll-animate">
+                                <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="font-semibold text-2xl mb-4 text-white">Student Marketplace</h3>
+                                <p class="text-gray-300 leading-relaxed">Buy and sell textbooks, study notes, and school supplies in a trusted peer-to-peer marketplace designed for students.</p>
+                            </div>
+
+                            <div class="glass p-8 rounded-2xl hover:shadow-xl transition-all duration-300 group scroll-animate">
+                                <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-red-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                    ></path>
+                                </div>
+                                <h3 class="font-semibold text-2xl mb-4 text-white">Peer Mentoring</h3>
+                                <p class="text-gray-300 leading-relaxed">Get help from upperclassmen or offer your expertise to younger students. Learn and teach based on your class levels.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- How It Works Section -->
+                <section id="how-it-works" class="py-20 bg-gray-900">
+                    <div class="container mx-auto px-4">
+                        <div class="text-center mb-16 scroll-animate">
+                            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
+                            <p class="text-xl text-gray-300 max-w-3xl mx-auto">Get started in three simple steps</p>
+                        </div>
+
+                        <div class="max-w-4xl mx-auto">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div class="text-center scroll-animate">
+                                    <div class="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <span class="text-white font-bold text-2xl">1</span>
+                                    </div>
+                                    <h3 class="text-2xl font-semibold text-white mb-4">Sign Up</h3>
+                                    <p class="text-gray-300">Create your account and set up your profile with your interests and academic level.</p>
+                                </div>
+
+                                <div class="text-center scroll-animate">
+                                    <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <span class="text-white font-bold text-2xl">2</span>
+                                    </div>
+                                    <h3 class="text-2xl font-semibold text-white mb-4">Connect</h3>
+                                    <p class="text-gray-300">Find peers with similar interests or complementary skills for your projects and goals.</p>
+                                </div>
+
+                                <div class="text-center scroll-animate">
+                                    <div class="w-20 h-20 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <span class="text-white font-bold text-2xl">3</span>
+                                    </div>
+                                    <h3 class="text-2xl font-semibold text-white mb-4">Collaborate</h3>
+                                    <p class="text-gray-300">Work together on projects, share resources, and grow your network of ambitious peers.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pricing Section -->
+                <section id="pricing" class="py-20 bg-gray-800">
+                    <div class="container mx-auto px-4">
+                        <div class="text-center mb-16 scroll-animate">
+                            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Simple Pricing</h2>
+                            <p class="text-xl text-gray-300 max-w-3xl mx-auto">Choose the plan that works best for you</p>
+                        </div>
+
+                        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="glass p-8 rounded-2xl hover:shadow-xl transition-all duration-300 scroll-animate">
+                                <h3 class="text-2xl font-bold text-white mb-4">Free</h3>
+                                <div class="text-4xl font-bold text-white mb-6">$0<span class="text-lg text-gray-300">/month</span></div>
+                                <ul class="space-y-3 mb-8">
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Basic project collaboration
+                                    </li>
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Marketplace access
+                                    </li>
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Community forum
+                                    </li>
+                                </ul>
+                                <button class="pricing-btn w-full py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors">Get Started</button>
+                            </div>
+
+                            <div class="glass p-8 rounded-2xl hover:shadow-xl transition-all duration-300 relative scroll-animate">
+                                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                    <span class="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white mb-4">Pro</h3>
+                                <div class="text-4xl font-bold text-white mb-6">$9<span class="text-lg text-gray-300">/month</span></div>
+                                <ul class="space-y-3 mb-8">
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Everything in Free
+                                    </li>
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Advanced matching algorithms
+                                    </li>
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Priority mentoring access
+                                    </li>
+                                    <li class="flex items-center text-gray-300">
+                                        <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Premium support
+                                    </li>
+                                </ul>
+                                <button class="pricing-btn w-full py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all">Get Started</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Section -->
+                <section id="contact" class="py-20 bg-gray-900">
+                    <div class="container mx-auto px-4">
+                        <div class="text-center max-w-3xl mx-auto scroll-animate">
+                            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Get in Touch</h2>
+                            <p class="text-xl text-gray-300 mb-12 leading-relaxed">
+                                Have questions about PeerCodex? Want to join our community or provide feedback?
+                                We'd love to hear from you!
+                            </p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto mb-12">
+                                <a href="mailto:hello@peercodex.com" class="flex items-center space-x-4 p-6 glass rounded-2xl hover:shadow-xl transition-all duration-300 group">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="text-white font-semibold text-lg group-hover:text-indigo-300 transition-colors">Email Us</h3>
+                                        <p class="text-gray-300 group-hover:text-white transition-colors">hello@peercodex.com</p>
+                                    </div>
+                                </a>
+
+                                <div class="flex items-center space-x-4 p-6 glass rounded-2xl hover:shadow-xl transition-all duration-300 group cursor-pointer">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="text-white font-semibold text-lg group-hover:text-purple-300 transition-colors">Join our Discord</h3>
+                                        <p class="text-gray-300 group-hover:text-white transition-colors">Coming Soon!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="cta-login-btn" class="px-12 py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-2xl font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                                Start Your Journey Today
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Login Modal -->
+            <div id="login-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="glass-modal p-8 rounded-3xl max-w-md w-full animate-fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Welcome Back</h2>
+                        <p class="text-gray-600 dark:text-gray-300">Sign in with your Frisco ISD email</p>
+                    </div>
+
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <input
+                                type="email"
+                                id="login-email"
+                                placeholder="yourname@k12.friscoisd.org"
+                                class="w-full p-4 glass rounded-xl border-0 focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <input
+                                type="password"
+                                id="login-password"
+                                placeholder="Password"
+                                class="w-full p-4 glass rounded-xl border-0 focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                required
+                            />
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <button id="forgot-password-btn" class="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                            Forgot your password?
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-6">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Don't have an account?
+                            <button id="show-signup-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors font-semibold">
+                                Sign up
+                            </button>
+                        </p>
+                    </div>
+
+                    <button id="close-login-modal" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Signup Modal -->
+            <div id="signup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="glass-modal p-8 rounded-3xl max-w-md w-full animate-fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Join PeerCodex</h2>
+                        <p class="text-gray-600 dark:text-gray-300">Create your account with your Frisco ISD email</p>
+                    </div>
+
+                    <form id="signup-form" class="space-y-4">
+                        <div>
+                            <input
+                                type="email"
+                                id="signup-email"
+                                placeholder="yourname@k12.friscoisd.org"
+                                class="w-full p-4 glass rounded-xl border-0 focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <input
+                                type="password"
+                                id="signup-password"
+                                placeholder="Password (min. 6 characters)"
+                                class="w-full p-4 glass rounded-xl border-0 focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                required
+                                minlength="6"
+                            />
+                        </div>
+                        <div>
+                            <input
+                                type="password"
+                                id="signup-confirm-password"
+                                placeholder="Confirm Password"
+                                class="w-full p-4 glass rounded-xl border-0 focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                required
+                                minlength="6"
+                            />
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300">
+                            Create Account
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-6">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Already have an account?
+                            <button id="show-login-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors font-semibold">
+                                Sign in
+                            </button>
+                        </p>
+                    </div>
+
+                    <button id="close-signup-modal" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Onboarding Modal -->
+            <div id="onboarding-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="glass-modal rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                    <!-- Progress Steps -->
+                    <div class="p-6 border-b border-gray-600">
+                        <div class="steps w-full">
+                            <div class="step step-primary" data-step="1">Role</div>
+                            <div class="step" data-step="2">Academic</div>
+                            <div class="step" data-step="3">Interests</div>
+                            <div class="step" data-step="4">Profile</div>
+                            <div class="step" data-step="5">Ready</div>
+                        </div>
+                    </div>
+
+                    <!-- Onboarding Content -->
+                    <div id="onboarding-content" class="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- App Content (shown when logged in) -->
+            <div id="app-content" class="ml-64 pt-20 p-6 min-h-screen hidden">
+                <div id="page-content" class="animate-fade-in">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Scripts -->
+        <script type="module" src="./js/app.js"></script>
+    </body>
+</html>
